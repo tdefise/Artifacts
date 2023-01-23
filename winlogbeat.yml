@@ -1,0 +1,66 @@
+###################### Winlogbeat Configuration Example ########################
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/winlogbeat/index.html
+
+winlogbeat.event_logs:
+ - name: Security
+   tags: ["winevent-security"]
+ - name: System
+   tags: ["winevent-system"]
+ - name: Microsoft-Windows-Sysmon/Operational
+   tags: ["sysmon"]
+ - name: Microsoft-Windows-WMI-Activity/Operational
+   tags: ["winevent-wmi"]
+ - name: Microsoft-Windows-PowerShell/Operational
+   tags: ["winevent-powershell"]
+ - name: Windows PowerShell
+   tags: ["winevent-powershell"]
+ - name: Microsoft-Windows-TaskScheduler/Operational
+   tags: ["winevent-taskscheduler"]
+ - name: Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational
+   tags: ["winevent-rdp"]
+ - name: Microsoft-Windows-TerminalServices-RDPClient/Operational
+   tags: ["winevent-rdp"]
+ - name: Microsoft-Windows-TerminalServices-LocalSessionManager/Operational
+   tags: ["winevent-rdp"]
+ - name: Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational
+   tags: ["winevent-rdp"]
+ - name: Application
+   tags: ["winevent-application"]
+ - name: ForwardedEvents
+   forwarded: true
+   tags: ["forwardedevents"]
+   processors:
+   - drop_event.when.not.or:
+       - equals.winlog.channel: 'Security'
+       - equals.winlog.channel: 'System'
+       - equals.winlog.channel: 'Microsoft-Windows-Sysmon/Operational'
+       - equals.winlog.channel: 'Microsoft-Windows-WMI-Activity/Operational'
+       - equals.winlog.channel: 'Microsoft-Windows-PowerShell/Operational'
+       - equals.winlog.channel: 'Windows PowerShell'
+       - equals.winlog.channel: 'Microsoft-Windows-TaskScheduler/Operational'
+       - equals.winlog.channel: 'Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational'
+       - equals.winlog.channel: 'Microsoft-Windows-TerminalServices-RDPClient/Operational'
+       - equals.winlog.channel: 'Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'
+       - equals.winlog.channel: 'Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational'
+       - and:
+         - equals.winlog.channel: 'Application'
+         - or:
+           - equals.winlog.provider_name: 'Microsoft-Windows-Audit-CVE'
+           - equals.winlog.provider_name: 'Application Error'
+           - equals.winlog.provider_name: 'Application Hang'
+           - equals.winlog.provider_name: 'Windows Error Reporting'
+           - equals.winlog.provider_name: 'EMET'
+           - equals.winlog.provider_name: 'Microsoft-Windows-SoftwareRestrictionPolicies'
+           - equals.winlog.provider_name: 'MsiInstaller'
+processors:
+ - add_host_metadata:
+     netinfo.enabled: true
+
+#================================ Logging =====================================
+
+logging.level: info
+logging.to_files: true
+
+output.logstash:
+  hosts: ["172.27.250.50:1513"]
